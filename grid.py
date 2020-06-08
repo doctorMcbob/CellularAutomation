@@ -16,7 +16,7 @@ rules are a binary number between 0 and 2^256
 
 neighboring cells are converted to binary
 
-0 0 1 
+0 0 1
 1   0
 0 1 1
 
@@ -24,7 +24,15 @@ becomes 00110011 becomes 51
 
 then the 51(th) index of the binary rule becomes the cells value in the next generation
 
+
 2^2^8 or 2^256 possible rules (thats a lot!)
+
+TO DO LIST
+[] save interesting rules to file
+[] mouse functionality for drawing
+[] rule "builder"
+... all 256 possible permutations visualised
+    in a GUI so you can set the exact rule you want
 """
 import pygame
 from pygame import Surface, Rect
@@ -35,7 +43,7 @@ from random import randint
 PW = 16
 W, H = 81, 42
 col = [(255, 255, 255), (0, 0, 0)]
-tobin = lambda n, b: ((bin(n))[2:][::-1] + ('0' * b))[:b]
+tobin = lambda n, b: (('0' * b) + (bin(n))[2:])[-b:]
 
 def nbrs(pos, grid):
     X, Y = pos
@@ -43,8 +51,9 @@ def nbrs(pos, grid):
     for _y in range(Y-1, Y+2):
         for _x in range(X-1, X+2):
             if (X, Y) == (_x, _y): continue
-            ret += grid[_y % H][_x % W]
+            ret = grid[_y % H][_x % W] + ret
     return ret
+
 
 def fresh_start(W, H, rand=False):
     grid = []
@@ -57,13 +66,13 @@ def fresh_start(W, H, rand=False):
     return grid
 
 def apply_rule(rule, grid):
-    rule = tobin(rule, 256)
+    rule = tobin(rule, 256)[::-1]
     new = []
     for y, line in enumerate(grid):
         new.append([])
         for x, slot in enumerate(line):
             n = nbrs((x, y), grid)
-            new[-1].append(rule[int("0b"+n, 2)])
+            new[-1].append(rule[int(n, 2)])
     return new
 
 def drawn_grid(grid):
@@ -74,26 +83,6 @@ def drawn_grid(grid):
             pygame.draw.rect(surf, col[int(slot)], Rect((x*PW+1, y*PW+1), (PW-2, PW-2)))
     return surf
             
-
-pygame.init()
-SCREEN = pygame.display.set_mode((W * PW, (H + 2) * PW))
-pygame.display.set_caption("~~~ ... ___ /\\ ___ ... ~~~")
-CLOCK = pygame.time.Clock()
-
-HEL = pygame.font.SysFont("helvetica", PW)
-live = True
-play = True
-
-num = randint(0, 2**256)
-grid = fresh_start(W, H)
-t = 0
-
-def new(n=False):
-    global num, grid, t
-    num = n or randint(0, 2**256)
-    grid = fresh_start(W, H)
-    t = 0
-
 numkeys = {K_0:"0",K_1:"1",K_2:"2",K_3:"3",K_4:"4",K_5:"5",K_6:"6",K_7:"7",K_8:"8",K_9:"9"}
 def get_num():
     n = ""
@@ -108,7 +97,24 @@ def get_num():
             if e.type == KEYDOWN:
                 if e.key in numkeys: n += numkeys[e.key]
                 if e.key == K_BACKSPACE: n = n[:-1]
-                if e.key == K_RETURN: return int(n)
+                if e.key == K_RETURN: return int(n) if n else 0
+
+pygame.init()
+SCREEN = pygame.display.set_mode((W * PW, (H + 2) * PW))
+pygame.display.set_caption("``` ^^^ ~~~ +++ === --- ... ,,, ___ /\\ ___ ,,, ... --- === +++ ~~~ ^^^ ```")
+CLOCK = pygame.time.Clock()
+
+HEL = pygame.font.SysFont("helvetica", PW)
+live = True
+play = True
+
+def new(n=False):
+    global num, grid, t
+    num = n or randint(0, 2**256)
+    grid = fresh_start(W, H)
+    t = 0
+
+new()
 
 while live:
     for e in pygame.event.get():
