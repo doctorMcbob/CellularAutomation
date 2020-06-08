@@ -1,3 +1,20 @@
+"""
+lemme just throw a docstring up here
+
+keys:
+  SPACE    |   play, pause
+  r        |   random rule
+
+soon ill put in drawing cells and customizing rules
+
+rules are a binary representation of the 8 neighboring cells
+
+0 1 2
+3   4
+5 6 7
+
+2^2^8 possible rules (thats a lot!)
+"""
 import pygame
 from pygame import Surface, Rect
 from pygame.locals import *
@@ -54,6 +71,7 @@ CLOCK = pygame.time.Clock()
 
 HEL = pygame.font.SysFont("helvetica", PW)
 live = True
+play = True
 
 num = randint(0, 2**256)
 grid = fresh_start(W, H)
@@ -63,18 +81,21 @@ def new_random():
     global num, grid, t
     num = randint(0, 2**256)
     grid = fresh_start(W, H)
+    t = 0
 
 while live:
     for e in pygame.event.get():
         if e.type == QUIT or e.type == KEYDOWN and e.key == K_ESCAPE: live = False
         if e.type == KEYDOWN:
             if e.key == K_r: new_random()
-
+            if e.key == K_SPACE: play = not play
+            
     SCREEN.fill((255, 255, 255))
     SCREEN.blit(HEL.render("Rule " + str(num), 0, (0, 0, 0)), (0, 0))
     SCREEN.blit(drawn_grid(grid), (0, PW * 2))
     pygame.display.update()
-    t += CLOCK.tick(30)
-    if t > 300:
-        t = 0
-        grid = apply_rule(num, grid)
+    if play:
+        t += CLOCK.tick(30)
+        if t > 300:
+            t = 0
+            grid = apply_rule(num, grid)
