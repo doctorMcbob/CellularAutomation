@@ -8,13 +8,23 @@ keys:
 
 soon ill put in drawing cells and customizing rules
 
-rules are a binary representation of the 8 neighboring cells
 
-0 1 2
-3   4
-5 6 7
+essentially the same as the linear cellular automata,
+but instead of the 3 cells above, its the 8 cells surrounding
 
-2^2^8 possible rules (thats a lot!)
+rules are a binary number between 0 and 2^256
+
+neighboring cells are converted to binary
+
+0 0 1 
+1   0
+0 1 1
+
+becomes 00110011 becomes 51
+
+then the 51(th) index of the binary rule becomes the cells value in the next generation
+
+2^2^8 or 2^256 possible rules (thats a lot!)
 """
 import pygame
 from pygame import Surface, Rect
