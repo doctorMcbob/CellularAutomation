@@ -42,7 +42,7 @@ def drawn_grid(grid):
     surf = Surface((W * PW, H * PW))
     for y, line in enumerate(grid):
         for x, slot in enumerate(line):
-            pygame.draw.rect(surf, (0, 0, 0), Rect((x*PW, y*PW), (PW, PW)))
+            pygame.draw.rect(surf, (50, 50, 50), Rect((x*PW, y*PW), (PW, PW)))
             pygame.draw.rect(surf, col[int(slot)], Rect((x*PW+1, y*PW+1), (PW-2, PW-2)))
     return surf
             
@@ -52,7 +52,7 @@ SCREEN = pygame.display.set_mode((81 * PW, 42* PW))
 pygame.display.set_caption("~~~ ... ___ /\\ ___ ... ~~~")
 CLOCK = pygame.time.Clock()
 
-HEL = pygame.font.SysFont("helvetica", PW * 2)
+HEL = pygame.font.SysFont("helvetica", PW)
 live = True
 
 num = randint(0, 2**256)
