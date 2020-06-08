@@ -2,6 +2,7 @@
 lemme just throw a docstring up here
 
 keys:
+  RETURN   |   type number for rule
   SPACE    |   play, pause
   r        |   random rule
 
@@ -22,7 +23,7 @@ from pygame.locals import *
 from random import randint
 
 PW = 16
-W, H = 81, 40
+W, H = 81, 42
 col = [(255, 255, 255), (0, 0, 0)]
 tobin = lambda n, b: ((bin(n))[2:][::-1] + ('0' * b))[:b]
 
@@ -65,7 +66,7 @@ def drawn_grid(grid):
             
 
 pygame.init()
-SCREEN = pygame.display.set_mode((81 * PW, 42* PW))
+SCREEN = pygame.display.set_mode((W * PW, (H + 2) * PW))
 pygame.display.set_caption("~~~ ... ___ /\\ ___ ... ~~~")
 CLOCK = pygame.time.Clock()
 
@@ -77,19 +78,35 @@ num = randint(0, 2**256)
 grid = fresh_start(W, H)
 t = 0
 
-def new_random():
+def new(n=False):
     global num, grid, t
-    num = randint(0, 2**256)
+    num = n or randint(0, 2**256)
     grid = fresh_start(W, H)
     t = 0
+
+numkeys = {K_0:"0",K_1:"1",K_2:"2",K_3:"3",K_4:"4",K_5:"5",K_6:"6",K_7:"7",K_8:"8",K_9:"9"}
+def get_num():
+    n = ""
+    while True:
+        surf = Surface((W*PW, PW))
+        surf.fill((150, 150, 150))
+        surf.blit(HEL.render(n, 0, (0, 0, 0)), (0, 0))
+        SCREEN.blit(surf, (0, PW))
+        pygame.display.update()
+        for e in pygame.event.get():
+            if e.type == QUIT or e.type == KEYDOWN and e.key == K_ESCAPE: quit()
+            if e.type == KEYDOWN:
+                if e.key in numkeys: n += numkeys[e.key]
+                if e.key == K_BACKSPACE: n = n[:-1]
+                if e.key == K_RETURN: return int(n)
 
 while live:
     for e in pygame.event.get():
         if e.type == QUIT or e.type == KEYDOWN and e.key == K_ESCAPE: live = False
         if e.type == KEYDOWN:
-            if e.key == K_r: new_random()
+            if e.key == K_r: new()
             if e.key == K_SPACE: play = not play
-            
+            if e.key == K_RETURN: new(get_num())
     SCREEN.fill((255, 255, 255))
     SCREEN.blit(HEL.render("Rule " + str(num), 0, (0, 0, 0)), (0, 0))
     SCREEN.blit(drawn_grid(grid), (0, PW * 2))
