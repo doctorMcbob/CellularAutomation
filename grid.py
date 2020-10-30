@@ -217,41 +217,45 @@ def rule_click(corner=(PW*40, PW*2)):
         num += 2 ** value
     else:
         num -= 2 ** value
-
+    
+    rule = tobin(num, 256)[::-1]
     if ROT_SYM:
         v = value
         for _ in range(3):
             _v = rotate_8bit(tobin(v, 8))
             v = int(_v, 2)
-            if rule[v] != rule[value] or v == value: continue
+            if rule[v] == rule[value] or v == value: continue
             if rule[v] == "0":
                 num += 2 ** v
             else:
                 num -= 2 ** v
 
+    rule = tobin(num, 256)[::-1]
     if HORIZ_SYM:
         _v = flip_8bit_horiz(tobin(value, 8))
         v = int(_v, 2)
-        if rule[v] == rule[value] and v != value:
+        if rule[v] != rule[value] and v != value:
             if rule[v] == "0":
                 num += 2 ** v
             else:
                 num -= 2 ** v
-
+                
+    rule = tobin(num, 256)[::-1]
     if VERT_SYM:
         _v = flip_8bit_vert(tobin(value, 8))
         v = int(_v, 2)
-        if rule[v] == rule[value] and v != value: 
+        if rule[v] != rule[value] and v != value: 
             if rule[v] == "0":
                 num += 2 ** v
             else:
                 num -= 2 ** v
 
+    rule = tobin(num, 256)[::-1]
     if HORIZ_SYM and VERT_SYM:
         _v = flip_8bit_horiz(tobin(value, 8))
-        _v = flip_8bit_vert(_v)
-        v = int(_v, 2)
-        if rule[v] == rule[value] and v != value: 
+        _v2 = flip_8bit_vert(_v)
+        v = int(_v2, 2)
+        if rule[v] != rule[value] and v != int(_v, 2) != value: 
             if rule[v] == "0":
                 num += 2 ** v
             else:
