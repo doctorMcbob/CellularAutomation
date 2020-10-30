@@ -49,6 +49,9 @@ from pygame.locals import *
 
 from random import randint
 
+import os
+import sys
+
 with open("neat.save", "r") as f:
     savelist = f.read().splitlines()
 
@@ -56,6 +59,36 @@ PW = 16
 W, H = 33, 33
 col = [(255, 255, 255), (0, 0, 0)]
 tobin = lambda n, b: (('0' * b) + (bin(n))[2:])[-b:]
+
+pygame.init()
+SCREEN = pygame.display.set_mode((1200, 600))
+pygame.display.set_caption("``` ^^^ ~~~ +++ === --- ... ,,, ___ /\\ ___ ,,, ... --- === +++ ~~~ ^^^ ```")
+CLOCK = pygame.time.Clock()
+
+HEL = pygame.font.SysFont("helvetica", PW)
+live = True
+play = False
+
+num = 0
+
+STACK = []
+FIRST_DUP = None
+
+ROT_SYM, HORIZ_SYM, VERT_SYM = False, False, False
+BTN_POSITIONS = {
+    "rotation": ((PW*40, PW*35), (PW*5, PW*2)),
+    "horiz": ((PW*46, PW*35), (PW*4, PW*2)),
+    "vert": ((PW*51, PW*35), (PW*4, PW*2)),
+}
+
+def pack(grid): return "".join(["".join(row) for row in grid])
+def unpack(string): return [list(string[i*W:(i+1)*W]) for i in range(H)]
+
+# look it makes sense to me okay
+def rotate_8bit(slot): return "".join([slot[i] for i in [5, 3, 0, 6, 1, 7, 4, 2]])
+def flip_8bit_horiz(slot): return "".join([slot[i] for i in [2, 1, 0, 4, 3, 7, 6, 5]])
+def flip_8bit_vert(slot): return "".join([slot[i] for i in [5, 6, 7, 3, 4, 0, 1, 2]])
+
 
 def nbrs(pos, grid):
     X, Y = pos
@@ -95,6 +128,24 @@ def drawn_grid(grid):
             pygame.draw.rect(surf, col[int(slot)], Rect((x*PW+1, y*PW+1), (PW-2, PW-2)))
     return surf
 
+def draw_buttons(dest, btn_positions=BTN_POSITIONS):
+    btn_bools = {
+        "vert": VERT_SYM,
+        "horiz": HORIZ_SYM,
+        "rotation": ROT_SYM
+    }
+    for name in btn_positions:
+        pos, dim = btn_positions[name]
+        pygame.draw.rect(dest, (50, 50, 50), Rect(pos, dim))
+        pygame.draw.rect(dest, col[btn_bools[name]], Rect((pos[0]+1, pos[1]+1), (dim[0]-2, dim[1]-2)))
+        dest.blit(HEL.render(name, 0, col[not btn_bools[name]]), (pos[0] + dim[0]//4, pos[1]+dim[1]//4))
+
+def drawn_mini(grid):
+    surf = Surface((W * 2, H * 2))
+    for y, line in enumerate(grid):
+        for x, slot in enumerate(line):
+            pygame.draw.rect(surf, col[int(slot)], Rect((x*2, y*2), (2, 2)))
+    return surf
 
 def drawn_rule_seg(bit, on=False):
     surf = Surface((PW * 1.5, PW * 1.5))
@@ -116,7 +167,6 @@ def drawn_rule_seg(bit, on=False):
 
     return surf
 
-
 def drawn_rule(rule):
     rule = tobin(rule, 256)[::-1]
     surf = Surface((PW * 4 * 8, PW * 4 * 8))
@@ -134,9 +184,20 @@ def drawn_rule(rule):
 
     return surf
 
+def btn_click(btn_positions=BTN_POSITIONS):
+    global ROT_SYM, HORIZ_SYM, VERT_SYM
+    pygame.display.update()
+    x, y = pygame.mouse.get_pos()
+
+    for name in btn_positions:
+        if Rect(btn_positions[name]).collidepoint((x, y)):
+            if name == "rotation": ROT_SYM = not ROT_SYM
+            if name == "horiz": HORIZ_SYM = not HORIZ_SYM
+            if name == "vert": VERT_SYM = not VERT_SYM
+            
 
 def rule_click(corner=(PW*40, PW*2)):
-    global num
+    global num, FIRST_DUP, STACK
     pygame.display.update()
     x, y = pygame.mouse.get_pos()
     cx, cy = corner
@@ -150,11 +211,57 @@ def rule_click(corner=(PW*40, PW*2)):
     x = x // 4
     y = y // 4
 
-    if rule[x + (y*16)] == "0":
-        num += 2 ** (x + (y * 16))
-    else:
-        num -= 2 ** (x + (y * 16))
+    value = x + (y*16)
     
+    if rule[value] == "0":
+        num += 2 ** value
+    else:
+        num -= 2 ** value
+
+    if ROT_SYM:
+        v = value
+        for _ in range(3):
+            _v = rotate_8bit(tobin(v, 8))
+            v = int(_v, 2)
+            if rule[v] != rule[value] or v == value: continue
+            if rule[v] == "0":
+                num += 2 ** v
+            else:
+                num -= 2 ** v
+
+    if HORIZ_SYM:
+        _v = flip_8bit_horiz(tobin(value, 8))
+        v = int(_v, 2)
+        if rule[v] == rule[value] and v != value:
+            if rule[v] == "0":
+                num += 2 ** v
+            else:
+                num -= 2 ** v
+
+    if VERT_SYM:
+        _v = flip_8bit_vert(tobin(value, 8))
+        v = int(_v, 2)
+        if rule[v] == rule[value] and v != value: 
+            if rule[v] == "0":
+                num += 2 ** v
+            else:
+                num -= 2 ** v
+
+    if HORIZ_SYM and VERT_SYM:
+        _v = flip_8bit_horiz(tobin(value, 8))
+        _v = flip_8bit_vert(_v)
+        v = int(_v, 2)
+        if rule[v] == rule[value] and v != value: 
+            if rule[v] == "0":
+                num += 2 ** v
+            else:
+                num -= 2 ** v
+
+        
+    FIRST_DUP = None
+    STACK = []
+
+        
 numkeys = {K_0:"0",K_1:"1",K_2:"2",K_3:"3",K_4:"4",K_5:"5",K_6:"6",K_7:"7",K_8:"8",K_9:"9"}
 def get_num():
     n = ""
@@ -183,24 +290,17 @@ def save_interesting(n):
         f.write(str(n)+"\n")
     savelist.append(str(n))
 
-pygame.init()
-SCREEN = pygame.display.set_mode((1200, 600))
-pygame.display.set_caption("``` ^^^ ~~~ +++ === --- ... ,,, ___ /\\ ___ ,,, ... --- === +++ ~~~ ^^^ ```")
-CLOCK = pygame.time.Clock()
-
-HEL = pygame.font.SysFont("helvetica", PW)
-live = True
-play = False
-
-num = 0
 
 def new(n=-1):
-    global num, grid, t
+    global num, grid, t, FIRST_DUP, STACK
     num = n if n >= 0 else randint(0, 2**256)
     grid = fresh_start(W, H)
     t = 0
+    FIRST_DUP = None
+    STACK = []
 
 def load_interesting():
+    global FIRST_DUP, STACK
     SCREEN.fill((255, 255, 255))
     SCREEN.blit(HEL.render("number between 0 and " + str(len(savelist)-1), 0, (0, 0, 0)), (0, 0))
     for i in range(len(savelist)):
@@ -209,7 +309,9 @@ def load_interesting():
     n = get_num()
     if n < len(savelist):
         new(int(savelist[n]))
-
+    FIRST_DUP = None
+    STACK = []
+        
 new(0)
 
 while live:
@@ -217,27 +319,51 @@ while live:
         if e.type == QUIT or e.type == KEYDOWN and e.key == K_ESCAPE: live = False
         if e.type == KEYDOWN:
             if e.key == K_r: new()
+            if e.key == K_d: new(0)
             if e.key == K_c: grid = fresh_start(W, H)
             if e.key == K_s: save_interesting(num)
             if e.key == K_l: load_interesting()
             if e.key == K_SPACE: play = not play
             if e.key == K_RETURN: new(get_num())
+            if e.key in [K_BACKSPACE, K_LEFT] and STACK: grid = unpack(STACK.pop())
+            if e.key == K_RIGHT:
+                layer = pack(grid)
+                if layer in STACK and not FIRST_DUP:
+                    FIRST_DUP = (STACK.index(layer), len(STACK))
+                STACK.append(layer)
+                grid = apply_rule(num, grid)
 
         if e.type == MOUSEBUTTONDOWN:
             x, y = get_mouse_logical()
             if 0 <= x < W and 0 <= y < H:
                 grid[y][x] = "1" if grid[y][x] == "0" else "0"
+                FIRST_DUP = None
+                STACK = []
             else:
                 rule_click()
+                btn_click()
             
     SCREEN.fill((255, 255, 255))
     if str(num) in savelist: SCREEN.blit(HEL.render("Rule " + str(num) + " (S)", 0, (0, 0, 0)), (0, 0))
     else: SCREEN.blit(HEL.render("Rule " + str(num), 0, (0, 0, 0)), (0, 0))
     SCREEN.blit(drawn_grid(grid), (PW * 2, PW * 2))
     SCREEN.blit(drawn_rule(num), (PW * 40, PW * 2))
+    if FIRST_DUP:
+        SCREEN.blit(HEL.render("First Repeating: frame " + str(FIRST_DUP[0]) + " repeats on frame " + str(FIRST_DUP[1]), 0, (0, 0, 0)), (0, PW * 36))
+    SCREEN.blit(HEL.render("Frame: " + str(len(STACK)), 0, (0, 0, 0)), (0, PW * 35))
+    draw_buttons(SCREEN)
     pygame.display.update()
+
     if play:
         t += CLOCK.tick(30)
         if t > 300:
+            if "-c" in sys.argv:
+                if not os.path.isdir("pics/"+str(num)): os.mkdir("pics/"+str(num))
+                pygame.image.save(drawn_mini(grid), "pics/"+str(num)+"/"+str(len(STACK))+".png")
             t = 0
+            layer = pack(grid)
+            if layer in STACK and not FIRST_DUP:
+                FIRST_DUP = (STACK.index(layer), len(STACK))
+            STACK.append(layer)
             grid = apply_rule(num, grid)
+
