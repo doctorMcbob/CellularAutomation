@@ -56,12 +56,12 @@ with open("neat.save", "r") as f:
     savelist = f.read().splitlines()
 
 PW = 16
-W, H = 33, 33
+W, H = 63, 63
 col = [(255, 255, 255), (0, 0, 0)]
 tobin = lambda n, b: (('0' * b) + (bin(n))[2:])[-b:]
 
 pygame.init()
-SCREEN = pygame.display.set_mode((1200, 600))
+SCREEN = pygame.display.set_mode(((W * 2)* PW  ,(H + 5) * PW))
 pygame.display.set_caption("``` ^^^ ~~~ +++ === --- ... ,,, ___ /\\ ___ ,,, ... --- === +++ ~~~ ^^^ ```")
 CLOCK = pygame.time.Clock()
 
@@ -76,9 +76,9 @@ FIRST_DUP = None
 
 ROT_SYM, HORIZ_SYM, VERT_SYM = False, False, False
 BTN_POSITIONS = {
-    "rotation": ((PW*40, PW*35), (PW*5, PW*2)),
-    "horiz": ((PW*46, PW*35), (PW*4, PW*2)),
-    "vert": ((PW*51, PW*35), (PW*4, PW*2)),
+    "rotation": ((PW*80, PW*35), (PW*5, PW*2)),
+    "horiz": ((PW*86, PW*35), (PW*4, PW*2)),
+    "vert": ((PW*91, PW*35), (PW*4, PW*2)),
 }
 
 def pack(grid): return "".join(["".join(row) for row in grid])
@@ -196,7 +196,7 @@ def btn_click(btn_positions=BTN_POSITIONS):
             if name == "vert": VERT_SYM = not VERT_SYM
             
 
-def rule_click(corner=(PW*40, PW*2)):
+def rule_click(corner=(PW*80, PW*2)):
     global num, FIRST_DUP, STACK
     pygame.display.update()
     x, y = pygame.mouse.get_pos()
@@ -351,10 +351,10 @@ while live:
     if str(num) in savelist: SCREEN.blit(HEL.render("Rule " + str(num) + " (S)", 0, (0, 0, 0)), (0, 0))
     else: SCREEN.blit(HEL.render("Rule " + str(num), 0, (0, 0, 0)), (0, 0))
     SCREEN.blit(drawn_grid(grid), (PW * 2, PW * 2))
-    SCREEN.blit(drawn_rule(num), (PW * 40, PW * 2))
+    SCREEN.blit(drawn_rule(num), (PW * 80, PW * 2))
     if FIRST_DUP:
-        SCREEN.blit(HEL.render("First Repeating: frame " + str(FIRST_DUP[0]) + " repeats on frame " + str(FIRST_DUP[1]), 0, (0, 0, 0)), (0, PW * 36))
-    SCREEN.blit(HEL.render("Frame: " + str(len(STACK)), 0, (0, 0, 0)), (0, PW * 35))
+        SCREEN.blit(HEL.render("First Repeating: frame " + str(FIRST_DUP[0]) + " repeats on frame " + str(FIRST_DUP[1]), 0, (0, 0, 0)), (PW*80, PW * 56))
+    SCREEN.blit(HEL.render("Frame: " + str(len(STACK)), 0, (0, 0, 0)), (PW*80, PW * 55))
     draw_buttons(SCREEN)
     pygame.display.update()
 
