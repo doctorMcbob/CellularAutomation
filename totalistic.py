@@ -29,7 +29,9 @@ from pygame.locals import *
 from pygame.rect import Rect
 from pygame import Surface
 
-PW = 16
+PW = 8
+W, H = 160, 90
+
 def getcol(base, n):
     unit = 255 // (base - 1)
     c = max(0, 255 - unit * n)
@@ -72,9 +74,9 @@ def next_layer(grid, rule):
         grid[-1].append(int(rule[avg(last[max(0, i-1):i+2])]))
 
 def drawn(rule):
-    grid = [[0,]*40 + [1] + [0,]*40]
-    for i in range(64): next_layer(grid, rule)
-    surf = pygame.Surface((81*PW, 64*PW))
+    grid = [[0,]*(W//2) + [1] + [0,]*(W//2)]
+    for i in range(H): next_layer(grid, rule)
+    surf = pygame.Surface(((W+1)*PW, H*PW))
     for y, line in enumerate(grid):
         for x, slot in enumerate(line):
             pygame.draw.rect(surf, (0, 0, 0), Rect((x*PW, y*PW), (PW, PW)))
@@ -82,20 +84,26 @@ def drawn(rule):
     return surf
 
 pygame.init()
-SCREEN = pygame.display.set_mode((81 * PW, PW * 42))
+SCREEN = pygame.display.set_mode(((W + 1) * PW, PW * H))
 pygame.display.set_caption(".,.,.,.,.,..,..,.,.,.,.`][`.,.,.,.,.,.,.,.,.,.,.,.,.")
 HEL = pygame.font.SysFont("helvetica", PW * 2)
 live = True
 num = 0
+scroll = H
+origH = H
 while live:
     for e in pygame.event.get():
         if e.type == QUIT or e.type == KEYDOWN and e.key == K_ESCAPE: live = False
         if e.type == KEYDOWN:
+            if e.key == K_LEFT: num = max(0, num - 1)
             if e.key == K_RIGHT: num += 1
-            if e.key == K_LEFT: num -= 1
+            if e.key == K_DOWN: scroll -= 1
+            if e.key == K_UP: scroll += 1
+    if scroll > H:
+        H += 1
     SCREEN.fill((255, 255, 255))
     SCREEN.blit(drawn_rule(num), (0, 0))
     SCREEN.blit(HEL.render(str(num) + " : " + tobase(3, num), 0, (0, 0, 0)), (0, PW*2))
-    SCREEN.blit(drawn(num), (0, PW*4))
+    SCREEN.blit(drawn(num), (0, PW*(4+origH-scroll)))
     pygame.display.update()
     
