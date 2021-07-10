@@ -71,6 +71,8 @@ play = False
 
 num = 0
 
+timer = 300 if "-t" not in sys.argv else int(sys.argv[sys.argv.index("-t") + 1])
+
 STACK = []
 FIRST_DUP = None
 
@@ -105,7 +107,7 @@ def fresh_start(W, H, rand=False):
     for y in range(H):
         grid.append([])
         for x in range(W):
-            if rand: cell = "0" if randint(0, 1) else "1"
+            if rand: cell = str(randint(0, 1))
             else: cell = "0" if (x, y) != (W // 2, H // 2) else "1"
             grid[-1].append(cell)
     return grid
@@ -360,7 +362,7 @@ while live:
 
     if play:
         t += CLOCK.tick(30)
-        if t > 300:
+        if t > timer:
             if "-c" in sys.argv:
                 if not os.path.isdir("pics/"+str(num)): os.mkdir("pics/"+str(num))
                 pygame.image.save(drawn_mini(grid), "pics/"+str(num)+"/"+str(len(STACK))+".png")
