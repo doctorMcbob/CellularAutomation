@@ -43,16 +43,15 @@ then you can alter the rule as it goes easily
 rule loader as well
 
 """
-import pygame
-from pygame import Surface, Rect
-from pygame.locals import *
-
 from random import randint
 
 import os
 import sys
 
-TIMER_LIMIT = 300 if '-t' not in sys.argv else int(sys.argv[sys.argv.index('-t') + 1])
+import pygame
+from pygame import Surface, Rect
+from pygame.locals import *
+
 
 with open("neat.save", "r") as f:
     savelist = f.read().splitlines()
@@ -72,6 +71,8 @@ live = True
 play = False
 
 num = 0
+
+timer = 300 if "-t" not in sys.argv else int(sys.argv[sys.argv.index("-t") + 1])
 
 STACK = []
 FIRST_DUP = None
@@ -110,7 +111,7 @@ def fresh_start(W, H, rand=False):
     for y in range(H):
         grid.append([])
         for x in range(W):
-            if rand: cell = "0" if randint(0, 1) else "1"
+            if rand: cell = str(randint(0, 1))
             else: cell = "0" if (x, y) != (W // 2, H // 2) else "1"
             grid[-1].append(cell)
     return grid
@@ -367,8 +368,8 @@ while live:
 
     if play:
         t += CLOCK.tick(30)
-        if t > TIMER_LIMIT:
-            if "-c" in sys.argv or RECORD_MODE:
+        if t > timer:
+            if "-c" in sys.argv:
                 if not os.path.isdir("pics/"+str(num)): os.mkdir("pics/"+str(num))
                 pygame.image.save(drawn_mini(grid), "pics/"+str(num)+"/"+str(len(STACK))+".png")
             t = 0
