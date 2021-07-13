@@ -52,6 +52,8 @@ from random import randint
 import os
 import sys
 
+TIMER_LIMIT = 300 if '-t' not in sys.argv else int(sys.argv[sys.argv.index('-t') + 1])
+
 with open("neat.save", "r") as f:
     savelist = f.read().splitlines()
 
@@ -75,10 +77,13 @@ STACK = []
 FIRST_DUP = None
 
 ROT_SYM, HORIZ_SYM, VERT_SYM = False, False, False
+RECORD_MODE = False
+
 BTN_POSITIONS = {
     "rotation": ((PW*80, PW*35), (PW*5, PW*2)),
     "horiz": ((PW*86, PW*35), (PW*4, PW*2)),
     "vert": ((PW*91, PW*35), (PW*4, PW*2)),
+    "record": ((PW*96, PW*35), (PW*4, PW*2)),
 }
 
 def pack(grid): return "".join(["".join(row) for row in grid])
@@ -132,7 +137,8 @@ def draw_buttons(dest, btn_positions=BTN_POSITIONS):
     btn_bools = {
         "vert": VERT_SYM,
         "horiz": HORIZ_SYM,
-        "rotation": ROT_SYM
+        "rotation": ROT_SYM,
+        "record": RECORD_MODE
     }
     for name in btn_positions:
         pos, dim = btn_positions[name]
@@ -141,10 +147,10 @@ def draw_buttons(dest, btn_positions=BTN_POSITIONS):
         dest.blit(HEL.render(name, 0, col[not btn_bools[name]]), (pos[0] + dim[0]//4, pos[1]+dim[1]//4))
 
 def drawn_mini(grid):
-    surf = Surface((W * 2, H * 2))
+    surf = Surface((W * 8, H * 8))
     for y, line in enumerate(grid):
         for x, slot in enumerate(line):
-            pygame.draw.rect(surf, col[int(slot)], Rect((x*2, y*2), (2, 2)))
+            pygame.draw.rect(surf, col[int(slot)], Rect((x*8, y*8), (8, 8)))
     return surf
 
 def drawn_rule_seg(bit, on=False):
@@ -185,7 +191,7 @@ def drawn_rule(rule):
     return surf
 
 def btn_click(btn_positions=BTN_POSITIONS):
-    global ROT_SYM, HORIZ_SYM, VERT_SYM
+    global ROT_SYM, HORIZ_SYM, VERT_SYM, RECORD_MODE
     pygame.display.update()
     x, y = pygame.mouse.get_pos()
 
@@ -194,6 +200,7 @@ def btn_click(btn_positions=BTN_POSITIONS):
             if name == "rotation": ROT_SYM = not ROT_SYM
             if name == "horiz": HORIZ_SYM = not HORIZ_SYM
             if name == "vert": VERT_SYM = not VERT_SYM
+            if name == "record": RECORD_MODE = not RECORD_MODE
             
 
 def rule_click(corner=(PW*80, PW*2)):
@@ -360,8 +367,8 @@ while live:
 
     if play:
         t += CLOCK.tick(30)
-        if t > 300:
-            if "-c" in sys.argv:
+        if t > TIMER_LIMIT:
+            if "-c" in sys.argv or RECORD_MODE:
                 if not os.path.isdir("pics/"+str(num)): os.mkdir("pics/"+str(num))
                 pygame.image.save(drawn_mini(grid), "pics/"+str(num)+"/"+str(len(STACK))+".png")
             t = 0

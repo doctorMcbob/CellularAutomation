@@ -110,15 +110,17 @@ def drawn_board(cells):
             col = DRAW_DATA["colors"]["alive"] if (x, y) in cells else DRAW_DATA["colors"]["dead"]
             pygame.draw.rect(surf, col,
                              Rect(((x*PW) + 1, (y*PW) + 1), (PW-2, PW-2)))
+    pygame.draw.rect(surf, (255, 0, 0), Rect(((PW*W//2)-1, (PW*H//2)-1), (2, 2)))
     return surf
 
 
 def drawn_rule():
-    return DRAW_DATA["font"].render(
-        "".join(map(lambda n: str(int(n in [LOWER_BOUND, UPPER_BOUND])), range(1, 9)))
-        +":"+
-        "".join(map(lambda n: str(int(n in LIFE_NUMBERS)), range(1, 9))),
-        0, DRAW_DATA["colors"]["text"])
+    binary_rule = "".join(map(lambda n: str(int(n in [LOWER_BOUND, UPPER_BOUND])), range(1, 9)))
+    binary_rule += ":"
+    binary_rule += "".join(map(lambda n: str(int(n in LIFE_NUMBERS)), range(1, 9)))
+    dec_rule = str(int(binary_rule[:8], 2)) + ":" + str(int(binary_rule[9:], 2))
+    
+    return DRAW_DATA["font"].render(binary_rule + "  " + dec_rule, 0, DRAW_DATA["colors"]["text"])
 
 
 def drawn_HUD():
@@ -224,6 +226,7 @@ if __name__ == """__main__""":
                 bx, by = DRAW_DATA["board"]
                 if bx <= x <= bx+PW*W and by <= y <= by+PW*H:
                     board_click((x, y))
+                    PLAY = False
                     FRAMES = []
 
                 hx, hy = DRAW_DATA["HUD"]
@@ -236,7 +239,7 @@ if __name__ == """__main__""":
                     PLAY = not PLAY
                     mili = 0
 
-                if e.key in [K_LEFT, K_RIGHT]:
+                if e.key in [K_LEFT, K_RIGHT, K_c, K_r]:
                     PLAY = False
 
                 if e.key == K_LEFT and FRAMES:
