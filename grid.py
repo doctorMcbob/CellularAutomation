@@ -95,6 +95,16 @@ def rotate_8bit(slot): return "".join([slot[i] for i in [5, 3, 0, 6, 1, 7, 4, 2]
 def flip_8bit_horiz(slot): return "".join([slot[i] for i in [2, 1, 0, 4, 3, 7, 6, 5]])
 def flip_8bit_vert(slot): return "".join([slot[i] for i in [5, 6, 7, 3, 4, 0, 1, 2]])
 
+def color(slot, state):
+    r = int("".join([slot[i] for i in [5, 3, 0, 1, 2]]), 2)
+    g = int("".join([slot[i] for i in [1, 2, 4, 7, 6]]), 2)
+    b = int("".join([slot[i] for i in [7, 6, 5, 3, 0]]), 2)
+
+    r *= 4 if state else 8
+    g *= 4 if state else 8
+    b *= 4 if state else 8
+
+    return (r, g, b)
 
 def nbrs(pos, grid):
     X, Y = pos
@@ -131,7 +141,7 @@ def drawn_grid(grid):
     for y, line in enumerate(grid):
         for x, slot in enumerate(line):
             pygame.draw.rect(surf, (50, 50, 50), Rect((x*PW, y*PW), (PW, PW)))
-            pygame.draw.rect(surf, col[int(slot)], Rect((x*PW+1, y*PW+1), (PW-2, PW-2)))
+            pygame.draw.rect(surf, color(nbrs((x, y), grid), slot), Rect((x*PW+1, y*PW+1), (PW-2, PW-2)))
     return surf
 
 def draw_buttons(dest, btn_positions=BTN_POSITIONS):
@@ -151,7 +161,7 @@ def drawn_mini(grid):
     surf = Surface((W * 8, H * 8))
     for y, line in enumerate(grid):
         for x, slot in enumerate(line):
-            pygame.draw.rect(surf, col[int(slot)], Rect((x*8, y*8), (8, 8)))
+            pygame.draw.rect(surf, color(nbrs((x, y), grid), slot), Rect((x*8, y*8), (8, 8)))
     return surf
 
 def drawn_rule_seg(bit, on=False):
@@ -226,7 +236,7 @@ def rule_click(corner=(PW*80, PW*2)):
     else:
         num -= 2 ** value
     
-    rule = tobin(num, 256)[::-1]
+    rule = tobin(num, 256)[::-]
     if ROT_SYM:
         v = value
         for _ in range(3):

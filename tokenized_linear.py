@@ -7,8 +7,8 @@ from tokens import tokens as tk
 
 import sys
 
-PW = 32
-W, H = 500, 250
+PW = 16
+W, H = 80, 80
 col = [(255, 255, 255), (0, 0, 0)]
 tobin8 = lambda n: (bin(n))[2:10][::-1] + '00000000'
 tobin3 = lambda n: (bin(n))[2:5][::-1] + '000'
@@ -44,7 +44,7 @@ def drawn(rule):
         for x, slot in enumerate(line[W//2:W//2 + W + 1]):
             idx = x + W//2
             name = "000" + slot if y == 0 else "".join(grid[y-1][max(0, idx-1):idx+2])+slot
-            tk.draw_token(surf, name, (x*PW, y*PW), PW=2)
+            tk.draw_token(surf, name, (x*PW, y*PW), PW=1)
     return surf
 
 pygame.init()
@@ -72,7 +72,7 @@ while live:
         H += 1
     SCREEN.fill((255, 255, 255))
     SCREEN.blit(drawn_rule(num), (0, 0))
-    SCREEN.blit(HEL.render(str(num) + " : " + tobin8(num), 0, (0, 0, 0)), (0, PW*2))
+    SCREEN.blit(HEL.render(str(num) + " : " + tobin8(num)[:8], 0, (0, 0, 0)), (0, PW*2))
     SCREEN.blit(img, (0, PW*(4+origH-scroll)))
     pygame.display.update()
 
