@@ -95,6 +95,33 @@ def rotate_8bit(slot): return "".join([slot[i] for i in [5, 3, 0, 6, 1, 7, 4, 2]
 def flip_8bit_horiz(slot): return "".join([slot[i] for i in [2, 1, 0, 4, 3, 7, 6, 5]])
 def flip_8bit_vert(slot): return "".join([slot[i] for i in [5, 6, 7, 3, 4, 0, 1, 2]])
 
+def color(slot, state):
+    r = int("".join([slot[i] for i in [5, 3, 0, 1, 2]]), 2) * 8
+    g = int("".join([slot[i] for i in [1, 2, 4, 7, 6]]), 2) * 8
+    b = int("".join([slot[i] for i in [7, 6, 5, 3, 0]]), 2) * 8
+
+    if state == 1:
+        r = max(0, r - 128)
+        g = max(0, g - 128)
+        b = max(0, b - 128)
+
+    return (255-r, 255-g, 255-b)
+
+def color2(slot, state):
+    density = sum([int(n) for n in slot])
+    thrd = 8 / 3
+    r = 192 + (density               ) * (256 / 8)
+    g = 64 + (density +   thrd      ) * (256 / 8)
+    b = 32  + (density + ( thrd * 2 )) * (256 / 8)
+    r %= 255
+    g %= 255
+    b %= 255
+    r = int(r)
+    g = int(g)
+    b = int(b)
+    if any((r, g, b)): print(r, g, b)
+    return (r, g, b) if state == 0 else (255-r, 255-g, 255-b)
+
 def nbrs(pos, grid):
     X, Y = pos
     ret = ""
@@ -130,7 +157,7 @@ def drawn_grid(grid):
     for y, line in enumerate(grid):
         for x, slot in enumerate(line):
             pygame.draw.rect(surf, (50, 50, 50), Rect((x*PW, y*PW), (PW, PW)))
-            pygame.draw.rect(surf, col[int(slot)], Rect((x*PW+1, y*PW+1), (PW-2, PW-2)))
+            pygame.draw.rect(surf, color2(nbrs((x, y), grid), slot), Rect((x*PW+1, y*PW+1), (PW-2, PW-2)))
     return surf
 
 def draw_buttons(dest, btn_positions=BTN_POSITIONS):
@@ -150,7 +177,7 @@ def drawn_mini(grid):
     surf = Surface((W * 8, H * 8))
     for y, line in enumerate(grid):
         for x, slot in enumerate(line):
-            pygame.draw.rect(surf, col[int(slot)], Rect((x*8, y*8), (8, 8)))
+            pygame.draw.rect(surf, color2(nbrs((x, y), grid), slot), Rect((x*8, y*8), (8, 8)))
     return surf
 
 def drawn_rule_seg(bit, on=False):
@@ -369,8 +396,8 @@ while live:
         t += CLOCK.tick(30)
         if t > timer:
             if "-c" in sys.argv:
-                if not os.path.isdir("pics/"+str(num)): os.mkdir("pics/"+str(num))
-                pygame.image.save(drawn_mini(grid), "pics/"+str(num)+"/"+str(len(STACK))+".png")
+                if not os.path.isdir("colorpics/"+str(num)): os.mkdir("colorpics/"+str(num))
+                pygame.image.save(drawn_mini(grid), "colorpics/"+str(num)+"/"+str(len(STACK))+".png")
             t = 0
             layer = pack(grid)
             if layer in STACK and not FIRST_DUP:
