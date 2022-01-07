@@ -4,7 +4,7 @@ from pygame.rect import Rect
 from pygame import Surface
 
 PW = 8
-W, H = 160, 90
+W, H = 240, 120
 col = [(255, 255, 255), (0, 0, 0)]
 tobin8 = lambda n: (bin(n))[2:10][::-1] + '00000000'
 tobin3 = lambda n: (bin(n))[2:5][::-1] + '000'

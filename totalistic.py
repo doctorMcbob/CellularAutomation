@@ -30,7 +30,7 @@ from pygame.rect import Rect
 from pygame import Surface
 
 PW = 8
-W, H = 160, 90
+W, H = 240, 120
 
 def getcol(base, n):
     unit = 255 // (base - 1)
