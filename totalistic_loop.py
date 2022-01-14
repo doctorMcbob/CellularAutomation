@@ -9,9 +9,10 @@ from copy import deepcopy
 import sys
 import os
 
-PW = 2 if "-pw" not in sys.argv else int(sys.argv[sys.argv.index("-pw") + 1])
-W = 640 if "-w" not in sys.argv else int(sys.argv[sys.argv.index("-w") + 1])
-H = 480 if "-h" not in sys.argv else int(sys.argv[sys.argv.index("-h") + 1])
+PW = 4 if "-pw" not in sys.argv else int(sys.argv[sys.argv.index("-pw") + 1])
+W = 400 if "-w" not in sys.argv else int(sys.argv[sys.argv.index("-w") + 1])
+H = 240 if "-h" not in sys.argv else int(sys.argv[sys.argv.index("-h") + 1])
+
 col = [(255, 255, 255), (0, 0, 0)]
 tobin8 = lambda n: (bin(n))[2:10][::-1] + '00000000'
 tobin3 = lambda n: (bin(n))[2:5][::-1] + '000'
@@ -21,16 +22,15 @@ STARTING_SEEDS = {
     "right":['0',]*(W) + ['1'],
     "left":['1',] + ['0',]*(W),
     "center": ['0',]*(W//2) + ['1',] + ['0',]*(W//2),
-    "random": [str(randint(0, 1)) for _ in range(W+1)],
+    "random": [str(randint(0, 2)) for _ in range(W+1)],
 }
 
 pygame.init()
 SCREEN = pygame.display.set_mode(((W+1) * PW, PW * H))
 pygame.display.set_caption("Rule 110 loop")
 
-live = __name__ == "__main__"
-rule = 110 if "-r" not in sys.argv else int(sys.argv[sys.argv.index("-r") + 1])
-
+live = True
+rule = 0 if "-r" not in sys.argv else int(sys.argv[sys.argv.index("-r") + 1])
 PAUSE = False
 LENGTH = 1
 
@@ -42,40 +42,44 @@ tape = deepcopy(STARTING_SEEDS[starting_seed])
 clock = pygame.time.Clock()
 
 def reset():
-    global tape, surf
+    global tape, surf, LENGTH
     pygame.display.set_caption("Rule {} loop".format(rule))
     tape = deepcopy(STARTING_SEEDS[starting_seed])
     surf = Surface(SCREEN.get_size())
     surf.fill((255, 255, 255))
+    LENGTH = 0
 
-def drawn_rule(rule):
-    surf = Surface((PW * 4 * 8, PW * 2))
-    surf.fill((255, 255, 255))
-    binary = tobin8(rule)
-    for i, b in enumerate(binary):
-        cell = tobin3(i)
-        pygame.draw.rect(surf, (0, 0, 0), Rect((i*(PW*4), 0), (PW, PW)))
-        pygame.draw.rect(surf, col[int(cell[2])], Rect((i*(PW*4)+1, 1), (PW-2, PW-2)))
-        pygame.draw.rect(surf, (0, 0, 0), Rect(((i*(PW*4))+PW, 0), (PW, PW)))
-        pygame.draw.rect(surf, col[int(cell[1])], Rect(((i*(PW*4))+PW+1, 1), (PW-2, PW-2)))
-        pygame.draw.rect(surf, (0, 0, 0), Rect(((i*(PW*4))+(PW*2), 0), (PW, PW)))
-        pygame.draw.rect(surf, col[int(cell[0])], Rect(((i*(PW*4))+(PW*2)+1, 1), (PW-2, PW-2)))
-        pygame.draw.rect(surf, (0, 0, 0), Rect(((i*(PW*4))+PW, PW), (PW, PW)))
-        pygame.draw.rect(surf, col[int(b)], Rect(((i*(PW*4))+PW+1, PW+1), (PW-2, PW-2)))
-    return surf
+def getcol(base, n):
+    unit = 255 // (base - 1)
+    c = max(0, 255 - unit * n)
+    return (c, c, c)
+
+def tobase(base, n):
+    if n == 0: return '0000000'
+    tern = []
+    while n:
+        n, r = divmod(n, base)
+        tern.append(str(r))
+    tern =  '0000000' + ''.join(tern[::-1])
+    tern = tern[::-1]
+    return tern[:7]
+
+def avg(nums):
+    average = sum(nums) / len(nums)
+    return int(average*3)
 
 def next_layer(last, rule):
-    rule = tobin8(rule)
+    rule = tobase(3, rule)
     new = []
     for i in range(len(last)):
-        ref = "".join([last[(i-1)%len(last)], last[i], last[(i+1)%len(last)]])
-        new.append(str(rule[int("0b"+ref, 2)]))
+        nums = [int(last[(i-1)%len(last)]), int(last[i]), int(last[(i+1)%len(last)])]
+        new.append(int(rule[avg(nums)]))
     return new
         
 def draw_next(tape, surf):
     surf.blit(surf, (0, 0-PW))
     for i, slot in enumerate(tape):
-        pygame.draw.rect(surf, col[int(slot)], Rect((i*PW, surf.get_height() - PW), (PW, PW)))
+        pygame.draw.rect(surf, getcol(3, int(slot)), Rect((i*PW, surf.get_height() - PW), (PW, PW)))
     return surf
 
 def snapshot(rule, length):
@@ -123,16 +127,16 @@ while live:
                 pic = snapshot(rule, LENGTH)
                 if pic:
                     if not os.path.isdir("pics/"): os.mkdir("pics/")
-                    s = "pics/linear.{}.{}.png".format(str(rule), starting_seed)
+                    s = "pics/totalistic.{}.{}.png".format(str(rule), starting_seed)
                     print(s)
                     pygame.image.save(pic, s)
 
     if not PAUSE:
-        tape = next_layer(tape, rule)
         draw_next(tape, surf)
+        tape = next_layer(tape, rule)
         LENGTH += 1
     
     SCREEN.blit(surf, (0, 0))
     pygame.display.update()
-#    clock.tick(40)
+    clock.tick(40)
 

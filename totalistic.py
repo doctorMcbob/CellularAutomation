@@ -31,6 +31,7 @@ from pygame import Surface
 
 PW = 8
 W, H = 240, 120
+FLIP = False
 
 def getcol(base, n):
     unit = 255 // (base - 1)
@@ -79,8 +80,11 @@ def drawn(rule):
     surf = pygame.Surface(((W+1)*PW, H*PW))
     for y, line in enumerate(grid):
         for x, slot in enumerate(line):
+            frame = 0 if y == 0 else sum(grid[y-1][max(0, x-1):x+2])
             pygame.draw.rect(surf, (0, 0, 0), Rect((x*PW, y*PW), (PW, PW)))
-            pygame.draw.rect(surf, getcol(3, int(slot)), Rect((x*PW+1, y*PW+1), (PW-2, PW-2)))
+            pygame.draw.rect(surf,
+                             getcol(7, frame) if FLIP else getcol(3, int(slot)),
+                             Rect((x*PW+1, y*PW+1), (PW-2, PW-2)))
     return surf
 
 pygame.init()
@@ -99,6 +103,8 @@ while live:
             if e.key == K_RIGHT: num += 1
             if e.key == K_DOWN: scroll -= 1
             if e.key == K_UP: scroll += 1
+
+            if e.key == K_SPACE: FLIP = not FLIP
     if scroll > H:
         H += 1
     SCREEN.fill((255, 255, 255))

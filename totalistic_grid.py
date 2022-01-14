@@ -21,6 +21,7 @@ pygame.init()
 SCREEN = pygame.display.set_mode((PW * W + PW * 4, PW * H + PW * 8))
 pygame.display.set_caption("``` ^^^ ~~~ +++ === --- ... ,,, ___ /\\ ___ ,,, ... --- === +++ ~~~ ^^^ ```")
 CLOCK = pygame.time.Clock()
+FLIP = False
 
 HEL = pygame.font.SysFont("helvetica", PW)
 live = True
@@ -57,7 +58,6 @@ def nbrs(pos, grid):
             ret.append(grid[_y % H][_x % W])
     return ret
 
-
 def fresh_start(W, H, rand=False):
     grid = []
     for y in range(H):
@@ -82,8 +82,10 @@ def drawn_grid(grid):
     surf = Surface((W * PW, H * PW))
     for y, line in enumerate(grid):
         for x, slot in enumerate(line):
+            n = nbrs((x, y), grid)
+            col = getcol(3, int(slot)) if not FLIP else getcol(17, sum(n))
             pygame.draw.rect(surf, (50, 50, 50), Rect((x*PW, y*PW), (PW, PW)))
-            pygame.draw.rect(surf, getcol(3, int(slot)), Rect((x*PW+1, y*PW+1), (PW-2, PW-2)))
+            pygame.draw.rect(surf, col, Rect((x*PW+1, y*PW+1), (PW-2, PW-2)))
     return surf
 
 def drawn_mini(grid):
@@ -192,19 +194,21 @@ while live:
         if e.type == KEYDOWN:
             if e.key == K_r: new()
             if e.key == K_d: new(0)
-            if e.key == K_c: grid = fresh_start(W, H)
+            if e.key == K_c:
+                grid = fresh_start(W, H)
             if e.key == K_s: save_interesting(num)
             if e.key == K_l: load_interesting()
+            if e.key == K_TAB: FLIP = not FLIP
             if e.key == K_SPACE: play = not play
             if e.key == K_RETURN: new(get_num())
-            if e.key in [K_BACKSPACE, K_LEFT] and STACK: grid = STACK.pop()
+            if e.key in [K_BACKSPACE, K_LEFT] and STACK:
+                grid = STACK.pop()
             if e.key == K_RIGHT:
                 layer = deepcopy(grid)
                 if layer in STACK and not FIRST_DUP:
                     FIRST_DUP = (STACK.index(layer), len(STACK))
                 STACK.append(layer)
                 grid = apply_rule(num, grid)
-
         if e.type == MOUSEBUTTONDOWN:
             x, y = get_mouse_logical()
             if 0 <= x < W and 0 <= y < H:
@@ -235,5 +239,6 @@ while live:
             if layer in STACK and not FIRST_DUP:
                 FIRST_DUP = (STACK.index(layer), len(STACK))
             STACK.append(layer)
+            prev = grid
             grid = apply_rule(num, grid)
 
