@@ -6,8 +6,8 @@ from pygame import Surface
 from random import randint
 from copy import deepcopy
 
-PW = 2
-W, H = 500, 300
+PW = 8
+W, H = 240, 120
 col = [(255, 255, 255), (0, 0, 0)]
 tobin8 = lambda n: (bin(n))[2:10][::-1] + '00000000'
 tobin3 = lambda n: (bin(n))[2:5][::-1] + '000'
@@ -44,7 +44,7 @@ def drawn(rule, random=False):
     surf = pygame.Surface(((W+1)*PW, H*PW))
     for y, line in enumerate(grid):
         for x, slot in enumerate(line):
-#            pygame.draw.rect(surf, (0, 0, 0), Rect((x*PW, y*PW), (PW, PW)))
+            pygame.draw.rect(surf, (0, 0, 0), Rect((x*PW, y*PW), (PW, PW)))
             pygame.draw.rect(surf, col[int(slot)], Rect((x*PW+1, y*PW+1), (PW, PW)))
     return surf
 

@@ -15,7 +15,7 @@ with open("totalneat.save", "r") as f:
     savelist = f.read().splitlines()
 
 PW = 16
-W, H = 33, 33
+W, H = 63, 63
 
 pygame.init()
 SCREEN = pygame.display.set_mode((PW * W + PW * 4, PW * H + PW * 8))
@@ -87,10 +87,10 @@ def drawn_grid(grid):
     return surf
 
 def drawn_mini(grid):
-    surf = Surface((W * 2, H * 2))
+    surf = Surface((W * 8, H * 8))
     for y, line in enumerate(grid):
         for x, slot in enumerate(line):
-            pygame.draw.rect(surf, getcol(3, int(slot)), Rect((x*2, y*2), (2, 2)))
+            pygame.draw.rect(surf, getcol(3, int(slot)), Rect((x*8, y*8), (8, 8)))
     return surf
 
 def drawn_rule_seg(average, val=0):

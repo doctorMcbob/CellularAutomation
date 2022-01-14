@@ -101,13 +101,13 @@ def color(slot, state):
     b = int("".join([slot[i] for i in [7, 6, 5, 3, 0]]), 2) * 8
 
     if state == 1:
-        r = max(0, r - 128)
-        g = max(0, g - 128)
-        b = max(0, b - 128)
+        r = (r + 128) % 255
+        g = (g + 128) % 255
+        b = (b + 128) % 255
 
     return (255-r, 255-g, 255-b)
 
-def color2(slot, state):
+def color2(slot, state, normalize=False):
     density = sum([int(n) for n in slot])
     thrd = 8 / 3
     r = 20 + (density               ) * (256 / 8)
@@ -119,9 +119,11 @@ def color2(slot, state):
     r = int(r)
     g = int(g)
     b = int(b)
-    if any((r, g, b)): print(r, g, b)
-    return (r, g, b) if state == 0 else (255-r, 255-g, 255-b)
-
+    if normalize:
+        return (r, g, b) if state == 0 else (255-r, 255-g, 255-b)
+    else:
+        return (r, g, b)
+    
 def nbrs(pos, grid):
     X, Y = pos
     ret = ""
