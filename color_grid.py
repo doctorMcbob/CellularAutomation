@@ -110,9 +110,9 @@ def color(slot, state):
 def color2(slot, state):
     density = sum([int(n) for n in slot])
     thrd = 8 / 3
-    r = 192 + (density               ) * (256 / 8)
-    g = 64 + (density +   thrd      ) * (256 / 8)
-    b = 32  + (density + ( thrd * 2 )) * (256 / 8)
+    r = 20 + (density               ) * (256 / 8)
+    g = 190 + (density +   thrd      ) * (256 / 8)
+    b = 210  + (density + ( thrd * 2 )) * (256 / 8)
     r %= 255
     g %= 255
     b %= 255
